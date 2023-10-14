@@ -50,17 +50,17 @@ class OpenFile:
         if retype:
             return self.__json  # 返回dict
         else:
-            return self.__file  # 返回字符串
+            return self.__file  # 返回str
 
     def CreateFile(self, filename, filedata):
         # filename 文件夹名称
         with pathlib.Path(filename).open(mode='w+', encoding='UTF-8') as f:
             json.dump(filedata, f, indent=4, ensure_ascii=False)
 
-    def DictZJson(self, SDict):
+    def DictZJson(self, SDict): #
         return json.dumps(SDict, indent=4, ensure_ascii=False)
 
-    def StringZList(self, string):
+    def StringZList(self, string):  #带换行\n字符串转列表
         list1 = []
         str1 = ''
         for x in string:
