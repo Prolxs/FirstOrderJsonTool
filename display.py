@@ -1,28 +1,25 @@
 import wx
 import jsonread
-import re
 
 
 class MyFrame(wx.Frame):
     def __init__(self):
-        super().__init__(parent=None, title='114514', pos=(100, 100), size=(800, 600))
+        super().__init__(parent=None, title='114514', size=(800, 600))
         MainPanel = wx.Panel(self)
+        self.Centre()
+        self.ChoiceFile = wx.LoadFileSelector('nihao', parent=MainPanel, extension='.*', default_name='en_us.json')
+        # print(self.ChoiceFile)
         # 选择部分
         self.StaText = wx.StaticText(MainPanel, label='选择目标文件')
         self.DownList = wx.Choice(MainPanel, size=(100, 23), choices=[str(x) for x in range(11)])
         self.DownList.SetColumns(n=10)
         self.ReloadButton = wx.Button(MainPanel, id=1, label='刷新')
         self.Pickup = wx.Button(MainPanel, id=2, label='提取')
-        self.tip = wx.StaticText(MainPanel,label='选择文件')
-        # 模组ID
-        # self.Modidtext = wx.StaticText(MainPanel, label='模组ID：')
-        # self.ModidValue = wx.TextCtrl(MainPanel, id=-1, style=wx.TE_READONLY, value='-')
-        # # 模组物品类
-        # self.ModClassText = wx.StaticText(MainPanel, label='物品类：')
-        # self.ModClassValue = wx.TextCtrl(MainPanel, id=-1, style=wx.TE_READONLY | wx.TE_MULTILINE,
-        #                                  size=(300, 50), value='-')
+        self.tip = wx.StaticText(MainPanel, label='选择文件')
         # JsonValue文本框
         self.JsonTitle = wx.StaticText(MainPanel, label='源文件')
+        self.ShiftButton1 = wx.RadioButton(MainPanel, id=1, label='源文件', style=wx.RB_GROUP)
+        self.ShiftButton2 = wx.RadioButton(MainPanel, id=2, label='值')
         self.JsonValue = wx.TextCtrl(MainPanel, id=-1, value='值', style=wx.TE_MULTILINE | wx.HSCROLL, size=(200, 300))
         # JsonClass
         self.JsonClassTitle = wx.StaticText(MainPanel, label='翻译内容')
@@ -38,15 +35,17 @@ class MyFrame(wx.Frame):
         self.CreateFileBox.Add(self.CreateButton, proportion=0, flag=wx.TOP)
         # 盒子管理器
         self.filebox = wx.BoxSizer()  # 水平盒子
-        # self.ModIdBox = wx.BoxSizer()  # 水平盒子
-        # self.ModClassBox = wx.BoxSizer()  # 水平盒子
         # 三个文本显示
+        self.ShiftBox = wx.BoxSizer()
         self.JsonValueBox = wx.BoxSizer(wx.VERTICAL)  # 垂直盒子
         self.JsonClassBox = wx.BoxSizer(wx.VERTICAL)  # 垂直盒子
         self.TJsonBox = wx.BoxSizer(wx.VERTICAL)  # 垂直盒子
         self.JsonBox = wx.BoxSizer()
         # json盒子纵向管理
-        self.JsonValueBox.Add(self.JsonTitle, 0, flag=wx.LEFT)
+        self.ShiftBox.Add(self.JsonTitle, 0, flag=wx.LEFT, border=5)
+        self.ShiftBox.Add(self.ShiftButton1, 0, flag=wx.LEFT, border=5)
+        self.ShiftBox.Add(self.ShiftButton2, 0, flag=wx.LEFT, border=5)
+        self.JsonValueBox.Add(self.ShiftBox, 0, flag=wx.LEFT)
         self.JsonValueBox.Add(self.JsonValue, 0, flag=wx.LEFT)
         self.JsonClassBox.Add(self.JsonClassTitle, 0, flag=wx.LEFT)
         self.JsonClassBox.Add(self.JsonClassValue, 0, flag=wx.LEFT)
@@ -64,20 +63,12 @@ class MyFrame(wx.Frame):
         self.filebox.Add(self.ReloadButton, 0, flag=wx.TOP, border=10)
         self.filebox.Add(self.Pickup, 0, flag=wx.TOP, border=10)
         self.filebox.Add(self.tip, 0, flag=wx.TOP | wx.LEFT, border=14)
-        # 水平盒子 第二行
-        # self.ModIdBox.Add(self.Modidtext, 0, flag=wx.TOP | wx.LEFT, border=15)
-        # self.ModIdBox.Add(self.ModidValue, 0, flag=wx.TOP | wx.LEFT, border=12)
-        # # 水平盒子 第三行
-        # self.ModClassBox.Add(self.ModClassText, 0, flag=wx.TOP | wx.LEFT, border=15)
-        # self.ModClassBox.Add(self.ModClassValue, flag=wx.TOP | wx.LEFT, border=15)
-        # 垂直盒子 第四行
         self.VsizeBox.Add(self.filebox, 0, flag=wx.TOP | wx.LEFT)  # 垂直盒子
-        # self.VsizeBox.Add(self.ModIdBox, 0, flag=wx.TOP, border=20)
-        # self.VsizeBox.Add(self.ModClassBox, 0, flag=wx.TOP | wx.BOTTOM, border=20)
         self.VsizeBox.Add(self.JsonBox, 0, flag=wx.TOP, border=20)
 
         MainPanel.SetSizer(self.VsizeBox)
         self.Bind(wx.EVT_BUTTON, handler=self.OnButton, id=1, id2=3)
+        self.Bind(wx.EVT_RADIOBUTTON, handler=self.OnShiftButton, id=1, id2=2)
         # self.Bind(wx.EVT_CHOICE, handler=self.OnChoice, source=self.DownList)
 
     def OnButton(self, event):
@@ -92,12 +83,7 @@ class MyFrame(wx.Frame):
                 n += 1
 
         if EventId == 2:  # 提取
-            try:
-                value = file.GetFileValue(json.GetPathJsonDir()[self.DownList.GetStringSelection()], None)
-                self.JsonValue.SetValue(value)
-            except KeyError:
-                self.tip.SetLabelText('重新选择文件！')
-                print('重新选择文件！')
+            self.DisplayerValue()
 
         if EventId == 3:
             filename = self.TJsonTitle.GetValue()  # 文件名
@@ -119,10 +105,35 @@ class MyFrame(wx.Frame):
                 self.tip.SetLabelText('请先先提取')
                 print('请先先提取')
 
+    def OnShiftButton(self, event):
+        EventId = event.GetId()
+        if EventId == 1:
+            self.DisplayerValue()
+        if EventId == 2:
+            self.DisplayerValue2()
 
-    # def OnChoice(self, event):
-    #     EventId = event.GetId()
-    #     EventObject = event.GetEventObject()
+    def DisplayerValue(self):
+        file = jsonread.OpenFile()
+        json = jsonread.JsonRead()
+        try:
+            value = file.GetFileValue(json.GetPathJsonDir()[self.DownList.GetStringSelection()], None)
+            self.JsonValue.SetValue(value)
+        except KeyError:
+            self.tip.SetLabelText('重新选择文件！')
+            print('重新选择文件！')
+
+    def DisplayerValue2(self):
+        file = jsonread.OpenFile()
+        json = jsonread.JsonRead()
+        self.JsonValue.SetValue('\0')
+        try:
+            value = file.GetFileValue(json.GetPathJsonDir()[self.DownList.GetStringSelection()], True)
+            list1 = list(value)
+            for x in list1:
+                self.JsonValue.write(value[x] + '\n')
+        except KeyError:
+            self.tip.SetLabelText('重新选择文件！')
+            print('重新选择文件！')
 
 
 class app(wx.App):
@@ -132,3 +143,4 @@ class app(wx.App):
     def OnPreInit(self):
         frame = MyFrame()
         frame.Show()
+        return
